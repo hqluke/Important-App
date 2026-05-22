@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+datasource db {
+  provider = "postgresql"
+}
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  gmailToken         GmailToken?
+  importantSenders   ImportantSender[]
+  importantKeywords  ImportantKeyword[]
+  savedNotifications SavedNotification[]
+  subscription       Subscription?
+}
+model GmailToken {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  gmailEmail   String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+model ImportantSender {
+  id        String   @id @default(uuid())
+  userId    String
+  email     String
+  label     String?
+  mode      String   @default("always")  // V2: "always" | "keyword_required"
+  createdAt DateTime @default(now())
+  category  String?  // "financial" | "healthcare" | "employment" | etc.
+  
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keywords ImportantKeyword[]  // relation for per-sender keywords
+  
+  @@unique([userId, email])
+}
+model ImportantKeyword {
+  id        String   @id @default(uuid())
+  userId    String
+  keyword   String
+  type      String   @default("want")  // future: "want" | "ignore"
+  senderId  String?                    // null = global, FK = per-sender rule
+  createdAt DateTime @default(now())
+  
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sender ImportantSender? @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, keyword, senderId])           // covers per-sender rules (senderId not null)
+  @@index([userId, senderId])                     // query performance
+  // Dedup for global keywords (senderId = null) handled in application logic on insert
+}
+model SavedNotification {
+  id        String   @id @default(uuid())
+  userId    String
+  subject   String
+  sender    String
+  date      DateTime
+  gmailId   String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, expiresAt])
+  @@index([userId, gmailId])
+}
+model Subscription {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  tier         String   @default("free")
+  stripeId     String?  @unique
+  stripeSubId  String?  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
