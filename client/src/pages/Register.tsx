@@ -1,26 +1,22 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { signup } from "../api/auth";
-import type { User } from "../../types";
+import { useNavigate, Navigate } from "react-router-dom";
+import { signup as apiSignup } from "../api/auth";
+import { useAuth } from "../context/AuthContext";
 
-interface RegisterProps {
-    setUser: (user: User) => void;
-    setToken: (token: string) => void;
-    setError: (error: string) => void;
-}
-
-const Register = ({ setUser, setToken, setError }: RegisterProps) => {
+const Register = () => {
+    const { user, setAuth, setError } = useAuth();
     const [form, setForm] = useState({ email: "", password: "" });
     const [submitting, setSubmitting] = useState(false);
     const navigate = useNavigate();
+
+    if (user) return <Navigate to="/" />;
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            const data = await signup(form.email, form.password);
-            setToken(data.token);
-            setUser(data.user);
+            const data = await apiSignup(form.email, form.password);
+            setAuth(data.token, data.user);
             navigate("/");
         } catch {
             setError("Registration failed");

@@ -5,6 +5,10 @@ export async function getGmailAuthUrl() {
     return data.url;
 }
 
+export async function disconnectGmail() {
+    await api.post("/gmail/disconnect");
+}
+
 export async function getGmailStatus() {
     const { data } = await api.get<{
         connected: boolean;

@@ -1,6 +1,8 @@
 import { google } from "googleapis";
 import crypto from "crypto";
+import { prisma } from "../db";
 
+// Singleton for auth URL + code exchange only (no user context needed)
 const oauth2Client = new google.auth.OAuth2(
     process.env.GMAIL_CLIENT_ID,
     process.env.GMAIL_CLIENT_SECRET,
@@ -50,18 +52,52 @@ export async function exchangeCode(code: string) {
     return tokens;
 }
 
+/**
+ * Builds a Gmail client with the given access token and refresh token for a specific user.
+ * The client is also set up to automatically refresh the access token when it expires.
+ * Use for Gmail API calls to avoid race conditions and token expiration.
+ * @param accessToken The access token to use
+ * @param refreshToken The refresh token to use
+ * @param userId The user ID to associate with the client
+ * @returns A Gmail client
+ */
+function buildGmailClient(accessToken: string, refreshToken: string, userId: string) {
+    const client = new google.auth.OAuth2(
+        process.env.GMAIL_CLIENT_ID,
+        process.env.GMAIL_CLIENT_SECRET,
+        process.env.GMAIL_REDIRECT_URI,
+    )
+
+    client.setCredentials({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+    })
+
+    client.on('tokens', async (tokens) => {
+        if (!tokens.access_token && !tokens.refresh_token && !tokens.expiry_date) return
+
+        await prisma.gmailToken.update({
+            where: { userId },
+            data: {
+                ...(tokens.access_token ? { accessToken: tokens.access_token } : {}),
+                ...(tokens.refresh_token ? { refreshToken: tokens.refresh_token } : {}),
+                ...(tokens.expiry_date ? { expiresAt: new Date(tokens.expiry_date) } : {}),
+            },
+            // errors are swallowed here, so we don't need to handle them (hopefully)
+        }).catch(() => {})
+    })
+
+    return google.gmail({ version: 'v1', auth: client })
+}
+
 //TODO: Set it up so user can get past emails from 1/3/6 months ago
 export async function fetchEmailHeaders(
     accessToken: string,
     refreshToken: string,
+    userId: string,
     afterTimestamp?: number,
 ) {
-    oauth2Client.setCredentials({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-    });
-
-    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+    const gmail = buildGmailClient(accessToken, refreshToken, userId);
 
     const query = afterTimestamp
         ? `after:${Math.floor(afterTimestamp / 1000)}`

@@ -37,18 +37,24 @@ app.get('/api/auth/gmail/callback', async (req, res) => {
     }
 
     const tokens = await exchangeCode(code)
+    const refreshToken = tokens.refresh_token ??
+      (await prisma.gmailToken.findUnique({ where: { userId }, select: { refreshToken: true } }))?.refreshToken
+
+    if (!refreshToken) {
+      return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/gmail/callback?error=no_refresh_token`)
+    }
 
     await prisma.gmailToken.upsert({
       where: { userId },
       update: {
         accessToken: tokens.access_token!,
-        refreshToken: tokens.refresh_token!,
+        refreshToken,
         expiresAt: new Date(tokens.expiry_date!),
       },
       create: {
         userId,
         accessToken: tokens.access_token!,
-        refreshToken: tokens.refresh_token!,
+        refreshToken,
         expiresAt: new Date(tokens.expiry_date!),
       },
     })

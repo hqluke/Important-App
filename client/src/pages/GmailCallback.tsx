@@ -38,7 +38,7 @@ const GmailCallback = () => {
                             {!error && "An unknown error occurred."}
                         </p>
                         <Link
-                            to="/gmail"
+                            to="/gmail/link"
                             className="text-blue-500 hover:underline font-medium"
                         >
                             Try Again

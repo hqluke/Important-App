@@ -1,26 +1,22 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { login } from "../api/auth";
-import type { User } from "../../types";
+import { useNavigate, Navigate } from "react-router-dom";
+import { login as apiLogin } from "../api/auth";
+import { useAuth } from "../context/AuthContext";
 
-interface LoginProps {
-    setUser: (user: User) => void;
-    setToken: (token: string) => void;
-    setError: (error: string) => void;
-}
-
-const Login = ({ setUser, setToken, setError }: LoginProps) => {
+const Login = () => {
+    const { user, setAuth, setError } = useAuth();
     const [form, setForm] = useState({ email: "", password: "" });
     const [submitting, setSubmitting] = useState(false);
     const navigate = useNavigate();
+
+    if (user) return <Navigate to="/" />;
 
     const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            const data = await login(form.email, form.password);
-            setToken(data.token);
-            setUser(data.user);
+            const data = await apiLogin(form.email, form.password);
+            setAuth(data.token, data.user);
             navigate("/");
         } catch {
             setError("Invalid email or password");
