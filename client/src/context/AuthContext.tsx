@@ -58,13 +58,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const logoutGmail = async () => {
-      try {
-        await disconnectGmail()
-        setGmailConnected(false)
-      } catch {
-        // even if revoke fails, consider it disconnected
-        setGmailConnected(false)
-      }
+        try {
+            await disconnectGmail();
+            setGmailConnected(false);
+        } catch {
+            // even if revoke fails, consider it disconnected
+            setGmailConnected(false);
+        }
     };
 
     return (

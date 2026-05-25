@@ -28,16 +28,16 @@ const Login = () => {
     return (
         <div className="min-h-[80vh] flex items-center justify-center p-4">
             <form
-                className="bg-white p-6 rounded shadow-md w-full max-w-lg"
+                className="bg-surface-card p-6 rounded shadow-md w-full max-w-lg"
                 onSubmit={handleSubmit}
             >
-                <h2 className="text-2xl mb-6 font-bold text-center text-gray-800">
+                <h2 className="text-2xl mb-6 font-bold text-center text-emphasis">
                     Login
                 </h2>
                 <input
                     type="email"
                     placeholder="email"
-                    className="border p-2 w-full mb-3"
+                    className="border border-border bg-surface-card text-emphasis placeholder:text-subtle p-2 w-full mb-3"
                     value={form.email}
                     onChange={(e) =>
                         setForm({ ...form, email: e.target.value })
@@ -46,7 +46,7 @@ const Login = () => {
                 <input
                     type="password"
                     placeholder="password"
-                    className="border p-2 w-full mb-3"
+                    className="border border-border bg-surface-card text-emphasis placeholder:text-subtle p-2 w-full mb-3"
                     value={form.password}
                     onChange={(e) =>
                         setForm({ ...form, password: e.target.value })

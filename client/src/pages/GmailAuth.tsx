@@ -32,7 +32,7 @@ const GmailAuth = () => {
 
     return (
         <div className="min-h-[80vh] flex items-center justify-center p-4">
-            <p>{loading ? "Redirecting to Google..." : "Redirecting..."}</p>
+            <p className="text-muted">{loading ? "Redirecting to Google..." : "Redirecting..."}</p>
         </div>
     );
 };

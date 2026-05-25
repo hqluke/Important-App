@@ -7,13 +7,13 @@ const GmailCallback = () => {
 
     return (
         <div className="min-h-[80vh] flex items-center justify-center p-4">
-            <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-lg text-center">
+            <div className="bg-surface-card p-8 rounded-lg shadow-md w-full max-w-lg text-center">
                 {success ? (
                     <>
                         <h2 className="text-2xl font-bold mb-4 text-green-600">
                             Gmail Connected!
                         </h2>
-                        <p className="mb-6 text-gray-600">
+                        <p className="mb-6 text-muted">
                             Your Gmail account has been linked successfully.
                         </p>
                         <Link
@@ -28,7 +28,7 @@ const GmailCallback = () => {
                         <h2 className="text-2xl font-bold mb-4 text-red-600">
                             Connection Failed
                         </h2>
-                        <p className="mb-6 text-gray-600">
+                        <p className="mb-6 text-muted">
                             {error === "missing_code" &&
                                 "No authorization code received from Google."}
                             {error === "invalid_state" &&
