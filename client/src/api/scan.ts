@@ -1,5 +1,13 @@
 import api from "./client";
 
+export const getScanStatus = async (): Promise<{
+    canScan: boolean;
+    lastScanAt: string | null;
+}> => {
+    const { data } = await api.get("/scan/status");
+    return data;
+};
+
 export const getScanResults = async () => {
     const { data } = await api.get("/scan/results");
     return data;

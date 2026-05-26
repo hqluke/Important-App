@@ -5,8 +5,8 @@ import EmailScanSetup from "../components/EmailScanSetup";
 import KeywordsSetup from "../components/KeywordsSetup";
 
 const Setup = () => {
-    const { user, gmailConnected } = useAuth();
-    const [showKeywords, setShowKeywords] = useState(false);
+    const { user, gmailConnected, sendersSetup } = useAuth();
+    const [showKeywords, setShowKeywords] = useState(sendersSetup);
 
     if (!user || !gmailConnected) return <Navigate to="/" />;
 
@@ -17,7 +17,6 @@ const Setup = () => {
             ) : (
                 <EmailScanSetup onSaved={() => setShowKeywords(true)} />
             )}
-            {/*  {showKeywords && <KeywordsSetup />}*/}
         </div>
     );
 };

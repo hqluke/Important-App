@@ -30,7 +30,9 @@ router.post("/", requireAuth, async (req: AuthRequest, res) => {
 });
 
 router.delete("/all", requireAuth, async (req: AuthRequest, res) => {
-    await prisma.importantKeyword.deleteMany({ where: { userId: req.userId! } });
+    await prisma.importantKeyword.deleteMany({
+        where: { userId: req.userId! },
+    });
     res.json({ ok: true });
 });
 

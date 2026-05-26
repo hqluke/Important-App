@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Navigate } from "react-router-dom";
-import { getScanResults, saveSenders, streamScan } from "../api/scan";
+import {
+    getScanResults,
+    getScanStatus,
+    saveSenders,
+    streamScan,
+} from "../api/scan";
 import ConfirmModal from "./ConfirmModal";
 import type { ScannedSender } from "../../types";
 
@@ -62,7 +67,7 @@ const phaseLabel: Record<string, string> = {
 };
 
 const EmailScanSetup = ({ onSaved }: { onSaved?: () => void }) => {
-    const { user, gmailConnected } = useAuth();
+    const { user, gmailConnected, updateSendersSetup } = useAuth();
     const [window, setWindow] = useState("3m");
     const [error, setError] = useState("");
     const [grabbing, setGrabbing] = useState(false);
@@ -74,38 +79,35 @@ const EmailScanSetup = ({ onSaved }: { onSaved?: () => void }) => {
         fetched: number;
         total: number;
     } | null>(null);
-    const [lastScanAt, setLastScanAt] = useState<number | null>(null);
-    const [now, setNow] = useState(Date.now());
+    const [pageLoaded, setPageLoaded] = useState(false);
+    const [withinCooldown, setWithinCooldown] = useState(false);
+    const [hoursLeft, setHoursLeft] = useState(0);
+    const [minsLeft, setMinsLeft] = useState(0);
     const abortRef = useRef<AbortController | null>(null);
 
-    useEffect(() => {
-        if (lastScanAt === null) return;
-        const id = setInterval(() => setNow(Date.now()), 30_000);
-        return () => clearInterval(id);
-    }, [lastScanAt]);
-
-    const withinCooldown =
-        lastScanAt !== null && now - lastScanAt < SCAN_COOLDOWN;
-
-    const cooldownRemaining = withinCooldown
-        ? SCAN_COOLDOWN - (now - lastScanAt!)
-        : 0;
-    const hoursLeft = Math.floor(cooldownRemaining / 3_600_000);
-    const minsLeft = Math.ceil((cooldownRemaining % 3_600_000) / 60_000);
-
-    // Restore previous scan results and check cooldown on mount
+    // On mount, check cooldown and restore previous results
     useEffect(() => {
         if (!user) return;
-        getScanResults()
-            .then((data) => {
-                // data.lastScanAt
-                setLastScanAt(
-                    data.lastScanAt
-                        ? new Date(data.lastScanAt).getTime()
-                        : null,
-                );
-                if (data.senders?.length) {
-                    const mapped: ScannedSender[] = data.senders.map(
+
+        Promise.all([getScanResults(), getScanStatus()])
+            .then(([results, status]) => {
+                const cooldown =
+                    !status.canScan &&
+                    status.lastScanAt !== null &&
+                    Date.now() - new Date(status.lastScanAt).getTime() <
+                        SCAN_COOLDOWN;
+
+                if (cooldown) {
+                    const elapsed =
+                        Date.now() - new Date(status.lastScanAt!).getTime();
+                    const remaining = SCAN_COOLDOWN - elapsed;
+                    setHoursLeft(Math.floor(remaining / 3_600_000));
+                    setMinsLeft(Math.ceil((remaining % 3_600_000) / 60_000));
+                }
+                setWithinCooldown(cooldown);
+
+                if (results.senders?.length) {
+                    const mapped: ScannedSender[] = results.senders.map(
                         (s: { email: string; count: number }) => ({
                             email: s.email,
                             count: s.count,
@@ -115,11 +117,26 @@ const EmailScanSetup = ({ onSaved }: { onSaved?: () => void }) => {
                     );
                     setSenders(mapped);
                 }
+
+                setPageLoaded(true);
             })
-            .catch(() => {});
+            .catch(() => {
+                setPageLoaded(true);
+            });
     }, [user]);
 
     if (!user || !gmailConnected) return <Navigate to="/" replace />;
+
+    if (!pageLoaded) {
+        return (
+            <div className="max-w-2xl mx-auto text-center">
+                <h2 className="text-4xl font-bold mb-2 text-emphasis">
+                    Scan Emails
+                </h2>
+                <p className="text-muted mt-4">Loading…</p>
+            </div>
+        );
+    }
 
     const handleGrabEmails = async () => {
         setGrabbing(true);
@@ -136,23 +153,6 @@ const EmailScanSetup = ({ onSaved }: { onSaved?: () => void }) => {
                 });
             },
             onComplete: (data) => {
-                if (data.cached) {
-                    // Server returned cached results (within cooldown)
-                    const mapped: ScannedSender[] = data.senders.map(
-                        (s: { email: string; count: number }) => ({
-                            email: s.email,
-                            count: s.count,
-                            isChecked: false,
-                            category: categorizeByDomain(s.email),
-                        }),
-                    );
-                    setSenders(mapped);
-                    setGrabbing(false);
-                    setScanStatus(null);
-                    setLastScanAt(Date.now());
-                    setNow(Date.now());
-                    return;
-                }
                 const mapped: ScannedSender[] = data.senders.map(
                     (s: { email: string; count: number }) => ({
                         email: s.email,
@@ -164,8 +164,9 @@ const EmailScanSetup = ({ onSaved }: { onSaved?: () => void }) => {
                 setSenders(mapped);
                 setGrabbing(false);
                 setScanStatus(null);
-                setLastScanAt(Date.now());
-                setNow(Date.now());
+                setWithinCooldown(true);
+                setHoursLeft(24);
+                setMinsLeft(0);
             },
             onError: (msg) => {
                 setError(msg);
@@ -188,6 +189,7 @@ const EmailScanSetup = ({ onSaved }: { onSaved?: () => void }) => {
                     category: s.category,
                 })),
             );
+            updateSendersSetup(true);
             setSenders([]);
             setShowConfirm(false);
             onSaved?.();
@@ -255,7 +257,6 @@ const EmailScanSetup = ({ onSaved }: { onSaved?: () => void }) => {
                 </div>
             )}
 
-            {/* Info about scanning */}
             {/* Cooldown notice */}
             {withinCooldown && (
                 <div className="border border-blue-500/30 bg-blue-500/10 rounded-lg py-3 mb-4 text-center">

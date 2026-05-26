@@ -16,7 +16,23 @@ router.get("/status", requireAuth, async (req: AuthRequest, res) => {
         where: { userId: req.userId! },
         select: { id: true, expiresAt: true },
     });
-    res.json({ connected: !!token, expiresAt: token?.expiresAt ?? null });
+
+    const sendersSetup = await prisma.importantSender.findFirst({
+        where: { userId: req.userId! },
+        select: { id: true },
+    });
+
+    const keywordsSetup = await prisma.importantKeyword.findFirst({
+        where: { userId: req.userId! },
+        select: { id: true },
+    });
+
+    res.json({
+        connected: !!token,
+        expiresAt: token?.expiresAt ?? null,
+        sendersSetup: !!sendersSetup,
+        keywordsSetup: !!keywordsSetup,
+    });
 });
 
 router.post("/disconnect", requireAuth, async (req: AuthRequest, res) => {

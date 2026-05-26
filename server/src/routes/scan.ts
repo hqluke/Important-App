@@ -25,9 +25,9 @@ router.post("/", requireAuth, async (req: AuthRequest, res) => {
         const window = (req.body.window as string) ?? "3m";
 
         if (!["1m", "3m", "6m", "12m"].includes(window)) {
-            return res
-                .status(400)
-                .json({ error: 'Invalid window. Use "1m", "3m", "6m", or "12m"' });
+            return res.status(400).json({
+                error: 'Invalid window. Use "1m", "3m", "6m", or "12m"',
+            });
         }
 
         const token = await prisma.gmailToken.findUnique({ where: { userId } });
@@ -122,6 +122,19 @@ router.delete("/reset", requireAuth, async (req: AuthRequest, res) => {
         data: { lastScanAt: null },
     });
     res.json({ ok: true });
+});
+
+// Check whether the user can scan (survives page refresh / disconnect)
+router.get("/status", requireAuth, async (req: AuthRequest, res) => {
+    const userId = req.userId!;
+    const token = await prisma.gmailToken.findUnique({
+        where: { userId },
+        select: { lastScanAt: true },
+    });
+    const lastScanAt = token?.lastScanAt ?? null;
+    const canScan =
+        !lastScanAt || Date.now() - lastScanAt.getTime() >= 24 * 60 * 60 * 1000;
+    res.json({ canScan, lastScanAt });
 });
 
 // Retrieve the last scan results (survives page refresh / disconnect)

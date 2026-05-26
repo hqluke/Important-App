@@ -8,7 +8,10 @@ interface AuthContextValue {
     error: string;
     gmailConnected: boolean;
     gmailLoading: boolean;
-    sendersAndKeywordsSetup: boolean;
+    sendersSetup: boolean;
+    keywordsSetup: boolean;
+    updateSendersSetup: (setup: boolean) => void;
+    updateKeywordsSetup: (setup: boolean) => void;
     setError: (error: string) => void;
     setAuth: (token: string, user: User) => void;
     logout: () => void;
@@ -28,15 +31,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [error, setError] = useState("");
     const [gmailConnected, setGmailConnected] = useState(false);
     const [gmailLoading, setGmailLoading] = useState(true);
-    const [sendersAndKeywordsSetup, setSendersAndKeywordsSetup] =
-        useState(false);
+    const [sendersSetup, setSendersSetup] = useState(false);
+    const [keywordsSetup, setKeywordsSetup] = useState(false);
 
     useEffect(() => {
         if (user) {
             setGmailLoading(true);
             getGmailStatus()
-                .then((status) => setGmailConnected(status.connected))
-                .catch(() => setGmailConnected(false))
+                .then((status) => {
+                    setGmailConnected(status.connected);
+                    setSendersSetup(status.sendersSetup);
+                    setKeywordsSetup(status.keywordsSetup);
+                })
+                .catch(() => {
+                    setGmailConnected(false);
+                    setSendersSetup(false);
+                    setKeywordsSetup(false);
+                })
                 .finally(() => setGmailLoading(false));
         } else {
             setGmailConnected(false);
@@ -65,9 +76,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await disconnectGmail();
             setGmailConnected(false);
         } catch {
-            // even if revoke fails, consider it disconnected
             setGmailConnected(false);
         }
+    };
+
+    const updateSendersSetup = (setup: boolean) => {
+        setSendersSetup(setup);
+    };
+
+    const updateKeywordsSetup = (setup: boolean) => {
+        setKeywordsSetup(setup);
     };
 
     return (
@@ -78,7 +96,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 error,
                 gmailConnected,
                 gmailLoading,
-                sendersAndKeywordsSetup,
+                sendersSetup,
+                keywordsSetup,
+                updateSendersSetup,
+                updateKeywordsSetup,
                 setError,
                 setAuth,
                 logout,

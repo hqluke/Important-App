@@ -13,6 +13,8 @@ export async function getGmailStatus() {
     const { data } = await api.get<{
         connected: boolean;
         expiresAt: string | null;
+        sendersSetup: boolean;
+        keywordsSetup: boolean;
     }>("/gmail/status");
     return data;
 }

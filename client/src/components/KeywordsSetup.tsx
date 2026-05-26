@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { getKeywords, createKeyword, deleteKeyword } from "../api/keywords";
 import ConfirmModal from "./ConfirmModal";
 import type { ImportantKeyword } from "../../types";
+import { useAuth } from "../context/AuthContext";
 
 const KeywordsSetup = () => {
+    const { updateKeywordsSetup } = useAuth();
     const navigate = useNavigate();
     const [keywords, setKeywords] = useState<ImportantKeyword[]>([]);
     const [input, setInput] = useState("");
@@ -127,14 +129,19 @@ const KeywordsSetup = () => {
                     title="Confirm Keywords"
                     confirmLabel="Confirm"
                     cancelLabel="Cancel"
-                    onConfirm={() => navigate("/")}
+                    onConfirm={() => {
+                        updateKeywordsSetup(true);
+                        navigate("/");
+                    }}
                     onCancel={() => setShowConfirm(false)}
                 >
                     {keywords.length === 0 && (
                         <p className="text-muted">No keywords added.</p>
                     )}
                     {keywords.map((kw) => (
-                        <div key={kw.id} className="py-0.5">{kw.keyword}</div>
+                        <div key={kw.id} className="py-0.5">
+                            {kw.keyword}
+                        </div>
                     ))}
                 </ConfirmModal>
             )}

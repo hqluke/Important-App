@@ -5,14 +5,16 @@ import { deleteAllKeywords } from "../api/keywords";
 import api from "../api/client";
 
 const SettingsPage = () => {
-    const { gmailConnected, logoutGmail } = useAuth();
+    const {
+        gmailConnected,
+        logoutGmail,
+        updateSendersSetup,
+        updateKeywordsSetup,
+    } = useAuth();
     const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
     const [pending, setPending] = useState("");
 
-    const act = async (
-        label: string,
-        fn: () => Promise<unknown>,
-    ) => {
+    const act = async (label: string, fn: () => Promise<unknown>) => {
         setPending(label);
         setMsg(null);
         try {
@@ -29,32 +31,40 @@ const SettingsPage = () => {
         {
             label: "Clear scanned results",
             desc: "Deletes all scanned sender results and resets the 24-hour scan cooldown so you can scan again immediately.",
-            action: async () => { await api.delete("/scan/reset"); },
+            action: async () => {
+                await api.delete("/scan/reset");
+            },
         },
         {
             label: "Delete all important senders",
             desc: "Removes every sender from your important list. Notifications for those senders will stop.",
-            action: deleteAllSenders,
+            action: async () => {
+                await deleteAllSenders();
+                updateSendersSetup(false);
+            },
         },
         {
             label: "Delete all keywords",
             desc: "Removes every keyword. Subject-matched notifications for those keywords will stop.",
-            action: deleteAllKeywords,
+            action: async () => {
+                await deleteAllKeywords();
+                updateKeywordsSetup(false);
+            },
         },
         ...(gmailConnected
-            ? [{
-                label: "Disconnect Gmail",
-                desc: "Revokes Gmail access and deletes your stored tokens. You'll need to re-link your Gmail account to use scanning.",
-                action: logoutGmail as () => Promise<unknown>,
-            }]
+            ? [
+                  {
+                      label: "Disconnect Gmail",
+                      desc: "Revokes Gmail access and deletes your stored tokens. You'll need to re-link your Gmail account to use scanning.",
+                      action: logoutGmail as () => Promise<unknown>,
+                  },
+              ]
             : []),
     ];
 
     return (
         <div className="max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold mb-2 text-emphasis">
-                Settings
-            </h2>
+            <h2 className="text-2xl font-bold mb-2 text-emphasis">Settings</h2>
             <p className="text-muted text-sm mb-6">
                 Manage your account data and connections.
             </p>
@@ -88,10 +98,10 @@ const ActionButton = ({
     pending,
     onClick,
 }: {
-    label: string
-    description: string
-    pending: boolean
-    onClick: () => void
+    label: string;
+    description: string;
+    pending: boolean;
+    onClick: () => void;
 }) => (
     <div className="group relative">
         <button
