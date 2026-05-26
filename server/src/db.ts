@@ -16,10 +16,10 @@ function createAdapter() {
     })
   }
 
-  // Dev: encrypted but doesn't verify server identity
+  const ca = fs.existsSync(certPath) ? fs.readFileSync(certPath).toString() : undefined
   return new PrismaPg({
     connectionString: url,
-    ssl: { rejectUnauthorized: false },
+    ssl: { ca, rejectUnauthorized: false },
   })
 }
 

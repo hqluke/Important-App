@@ -11,6 +11,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import GmailAuth from "./pages/GmailAuth";
 import GmailCallback from "./pages/GmailCallback";
+import Setup from "./pages/Setup";
+import SettingsPage from "./pages/Settings";
 
 function App() {
     return (
@@ -22,7 +24,12 @@ function App() {
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/gmail/link" element={<GmailAuth />} />
-                        <Route path="/gmail/callback" element={<GmailCallback />} />
+                        <Route
+                            path="/gmail/callback"
+                            element={<GmailCallback />}
+                        />
+                        <Route path="/setup" element={<Setup />} />
+                        <Route path="/settings" element={<SettingsPage />} />
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Route>
                 </Routes>

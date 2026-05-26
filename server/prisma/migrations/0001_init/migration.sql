@@ -22,6 +22,7 @@ CREATE TABLE "GmailToken" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "gmailEmail" TEXT NOT NULL,
+    "lastScanAt" TIMESTAMP(3),
 
     CONSTRAINT "GmailToken_pkey" PRIMARY KEY ("id")
 );

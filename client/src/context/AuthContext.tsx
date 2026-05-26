@@ -8,6 +8,7 @@ interface AuthContextValue {
     error: string;
     gmailConnected: boolean;
     gmailLoading: boolean;
+    sendersAndKeywordsSetup: boolean;
     setError: (error: string) => void;
     setAuth: (token: string, user: User) => void;
     logout: () => void;
@@ -27,6 +28,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [error, setError] = useState("");
     const [gmailConnected, setGmailConnected] = useState(false);
     const [gmailLoading, setGmailLoading] = useState(true);
+    const [sendersAndKeywordsSetup, setSendersAndKeywordsSetup] =
+        useState(false);
 
     useEffect(() => {
         if (user) {
@@ -75,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 error,
                 gmailConnected,
                 gmailLoading,
+                sendersAndKeywordsSetup,
                 setError,
                 setAuth,
                 logout,

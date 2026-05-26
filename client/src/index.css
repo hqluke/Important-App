@@ -14,3 +14,19 @@ html {
   background-color: #1e2021;
   color: #ffffff;
 }
+
+/* Dark scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #1e2021;
+}
+::-webkit-scrollbar-thumb {
+  background: #4a4c4e;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}

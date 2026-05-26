@@ -1,5 +1,4 @@
 import { useAuth } from "../context/AuthContext";
-import GmailDisconnect from "./GmailDisconnect";
 import logo from "../assets/important-app-logo-yellow-white-text.svg";
 import { useNavigate } from "react-router-dom";
 
@@ -23,7 +22,18 @@ const Navbar = () => {
             <div className="flex gap-x-4 items-center">
                 {user && (
                     <>
-                        <GmailDisconnect />
+                        <button
+                            onClick={() => navigate("/setup")}
+                            className="text-muted hover:text-emphasis transition-colors"
+                        >
+                            Setup
+                        </button>
+                        <button
+                            onClick={() => navigate("/settings")}
+                            className="text-muted hover:text-emphasis transition-colors"
+                        >
+                            Settings
+                        </button>
                         <button
                             onClick={handleLogout}
                             className="bg-blue-500 text-white p-2 px-4 rounded-md"

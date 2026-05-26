@@ -16,6 +16,7 @@ model User {
   importantKeywords  ImportantKeyword[]
   savedNotifications SavedNotification[]
   subscription       Subscription?
+  scannedSenders     ScannedSender[]
 }
 model GmailToken {
   id           String   @id @default(uuid())
@@ -26,6 +27,7 @@ model GmailToken {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   gmailEmail   String
+  lastScanAt   DateTime?
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 model ImportantSender {
@@ -79,4 +81,15 @@ model Subscription {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ScannedSender {
+  id        String   @id @default(uuid())
+  userId    String
+  email     String
+  count     Int
+  category  String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, email])
 }
